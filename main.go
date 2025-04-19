@@ -46,13 +46,21 @@ func main() {
 	for {
 		select {
 		case <-tick:
-			var count uint64
-			err := objs.PktCount.Lookup(uint32(0), &count)
+			key := uint32(0)
+			var values []uint64
+			err := objs.PktCount.Lookup(&key, &values)
 			if err != nil {
 				log.Printf("failed to lookup packet count: %v", err)
 				continue
 			}
-			log.Printf("Packet count: %d", count)
+			// Sum all per-CPU counters
+			var total uint64
+			for _, v := range values {
+				total += v
+				log.Printf("CPU %d: %d packets", v, v)
+			}
+			log.Printf("Total packet count: %d", total)
+
 		case <-stop:
 			log.Print("Received interrupt signal, exiting...")
 			return

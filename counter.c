@@ -5,7 +5,7 @@
 #include <bpf/bpf_helpers.h>
 
 struct{
-    __uint(type, BPF_MAP_TYPE_ARRAY);
+    __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
     __type(key, __u32);
     __type(value, __u64);
     __uint(max_entries, 1);
@@ -13,11 +13,11 @@ struct{
 
 SEC("xdp")
 
-int count_packets(){
+int count_packets(struct xdp_md *ctx){
     __u32 key = 0;
     __u64 *count = bpf_map_lookup_elem(&pkt_count, &key);
     if (count) {
-        __sync_fetch_and_add(count, 1);
+       (*count)++;
     }
     return XDP_PASS;
 }
